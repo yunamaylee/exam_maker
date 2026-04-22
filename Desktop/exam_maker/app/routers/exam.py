@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.services import exam as exam_service
+from app.schemas.exam import GenerateExamRequest
 
 router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 
@@ -55,15 +56,14 @@ async def extract_exam_range(
 @router.post("/generate")
 async def generate_exam(
     analysis_id: str,
-    passages: dict,
-    options: dict,
+    request: GenerateExamRequest,
     db: Session = Depends(get_db),
 ):
     exam = exam_service.generate_exam(
         db=db,
         analysis_id=analysis_id,
-        passages=passages,
-        options=options,
+        passages=request.passages.dict(),
+        options=request.options.dict(),
     )
     
     return {

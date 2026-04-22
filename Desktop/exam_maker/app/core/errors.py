@@ -60,9 +60,7 @@ def handle_service_error(
 ) -> None:
     if isinstance(error, AppError):
         raise error
-
-    print(f"🚨 에러 발생: {error}") 
-    print(f"🚨 에러 타입: {type(error)}")
+        
     raise AppError(
         source="service",
         code=code,

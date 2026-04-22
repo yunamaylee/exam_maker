@@ -1,3 +1,4 @@
+import json
 from sqlalchemy.orm import Session
 from app.models.exam import ExamAnalysis, ExamResult
 from app.core.errors import create_repo_error
@@ -76,7 +77,7 @@ def save_exam_result(
     try:
         exam_result = ExamResult(
             analysis_id=analysis_id,
-            exam_content=exam_content,
+            exam_content=json.dumps(exam_content, ensure_ascii=False),  # dict → JSON 문자열
         )
         db.add(exam_result)
         db.commit()

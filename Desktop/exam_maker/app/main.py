@@ -7,14 +7,14 @@ from fastapi.responses import JSONResponse
 app = FastAPI(title="exam_maker")
 app.include_router(exam_router.router)
 
-#에러 핸들러
+# 에러 핸들러
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, error: AppError):
     return JSONResponse(
         status_code=400,
         content={
             "success": False,
-            "message" : get_display_message(error.code),
+            "message": get_display_message(error.code),
             "code": error.code,
             "source": error.source,
         }
