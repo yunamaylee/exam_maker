@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from app.models.exam import ExamAnalysis, ExamResult
 from app.core.errors import create_repo_error
 
+
+# 분석 결과 저장
 def save_analysis(
     db: Session,
     school_name: str,
@@ -24,6 +26,8 @@ def save_analysis(
             cause=e,
         )
 
+
+# 분석 결과 조회
 def get_analysis(
     db: Session,
     analysis_id: str,
@@ -45,6 +49,8 @@ def get_analysis(
             cause=e,
         )
 
+
+# 학교 이름으로 분석 결과 조회 (캐싱용)
 def get_analysis_by_school_name(
     db: Session,
     school_name: str,
@@ -60,6 +66,8 @@ def get_analysis_by_school_name(
             cause=e,
         )
 
+
+# 시험지 저장
 def save_exam_result(
     db: Session,
     analysis_id: str,
@@ -79,5 +87,28 @@ def save_exam_result(
         raise create_repo_error(
             code="REPO/EXAM/SAVE_RESULT",
             message="시험지 저장 중 오류가 발생했습니다.",
+            cause=e,
+        )
+
+
+# 시험지 조회
+def get_exam_result(
+    db: Session,
+    exam_id: str,
+) -> ExamResult:
+    try:
+        exam = db.query(ExamResult).filter(
+            ExamResult.id == exam_id
+        ).first()
+        if not exam:
+            raise create_repo_error(
+                code="REPO/EXAM/RESULT_NOT_FOUND",
+                message="시험지를 찾을 수 없습니다.",
+            )
+        return exam
+    except Exception as e:
+        raise create_repo_error(
+            code="REPO/EXAM/GET_RESULT",
+            message="시험지 조회 중 오류가 발생했습니다.",
             cause=e,
         )

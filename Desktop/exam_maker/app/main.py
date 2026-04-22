@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request
+from app.routers import exam as exam_router
 from app.core.errors import AppError, get_display_message
 from fastapi.responses import JSONResponse
 
 
 app = FastAPI(title="exam_maker")
+app.include_router(exam_router.router)
 
 #에러 핸들러
 @app.exception_handler(AppError)
