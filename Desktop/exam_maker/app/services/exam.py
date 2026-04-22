@@ -10,6 +10,12 @@ from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
+
+# JSON 코드블록 제거 유틸
+def clean_json_response(text: str) -> str:
+    return text.replace("```json", "").replace("```", "").strip()
+
+
 # PDF 텍스트 추출 함수
 def extract_pdf_text(pdf_bytes: bytes) -> str:
     try:
@@ -24,6 +30,7 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
             code="SERVICE/EXAM/EXTRACT_PDF",
             message="PDF 텍스트 추출 중 오류가 발생했습니다.",
         )
+
 
 # 시험 패턴 분석 함수
 def analyze_exam_pattern(
@@ -51,7 +58,7 @@ def analyze_exam_pattern(
                 }
             ]
         )
-        analysis_result = json.loads(message.content[0].text)
+        analysis_result = json.loads(clean_json_response(message.content[0].text))
         return exam_repository.save_analysis(
             db=db,
             school_name=school_name,
@@ -80,7 +87,7 @@ def extract_passages(
                 }
             ]
         )
-        return json.loads(message.content[0].text)
+        return json.loads(clean_json_response(message.content[0].text))
     except Exception as e:
         handle_service_error(
             e,
@@ -118,8 +125,7 @@ def generate_exam(
                 }
             ]
         )
-
-        exam_content = json.loads(message.content[0].text)
+        exam_content = json.loads(clean_json_response(message.content[0].text))
 
         # DB 저장
         return exam_repository.save_exam_result(
