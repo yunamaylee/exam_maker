@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Optional, Any, Literal
 
 ErrorSource = Literal["repository", "service"]
 
@@ -20,8 +20,8 @@ class AppError(Exception):
         source: ErrorSource,
         code: str,
         message: str,
-        cause: Exception | None = None,
-        context: dict[str, Any] | None = None,
+        cause: Optional[Exception] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> None:
         super().__init__(message)
         self.source = source
@@ -40,8 +40,8 @@ class AppError(Exception):
 def create_repo_error(
     code: str,
     message: str,
-    cause: Exception | None = None,
-    context: dict[str, Any] | None = None,
+    cause: Optional[Exception] = None,
+    context: Optional[dict[str, Any]] = None,
 ) -> AppError:
     return AppError(
         source="repository",
@@ -56,7 +56,7 @@ def handle_service_error(
     error: Exception,
     code: str = "INTERNAL_ERROR",
     message: str = "서비스 처리 중 오류가 발생했습니다.",
-    context: dict[str, Any] | None = None,
+    context: Optional[dict[str, Any]] = None,
 ) -> None:
     if isinstance(error, AppError):
         raise error
