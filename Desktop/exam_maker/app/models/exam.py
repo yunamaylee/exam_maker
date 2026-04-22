@@ -4,7 +4,7 @@ from app.models.base import Base
 from datetime import datetime
 import uuid
 
-#시험 분석 모델 
+# 시험 분석 모델 
 class ExamAnalysis(Base):
     __tablename__ = "exam_analysis"
 
