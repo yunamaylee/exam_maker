@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 from app.dependencies import get_db
@@ -36,16 +37,15 @@ async def analyze_exam(
 # 시험 범위 본문 추출 함수
 @router.post("/range")
 async def extract_exam_range(
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
 ):
-    # PDF 바이트로 읽기
-    pdf_bytes = await file.read()
+    all_text = ""
+    for file in files:
+        pdf_bytes = await file.read()
+        pdf_text = exam_service.extract_pdf_text(pdf_bytes)
+        all_text += f"\n\n{pdf_text}"
     
-    # 텍스트 추출
-    pdf_text = exam_service.extract_pdf_text(pdf_bytes)
-    
-    # 본문 추출
-    passages = exam_service.extract_passages(pdf_text)
+    passages = exam_service.extract_passages(all_text)
     
     return {
         "success": True,
