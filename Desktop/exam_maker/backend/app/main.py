@@ -2,9 +2,18 @@ from fastapi import FastAPI, Request
 from app.routers import exam as exam_router
 from app.core.errors import AppError, get_display_message
 from fastapi.responses import JSONResponse
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="exam_maker")
+
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(exam_router.router)
 
 # 에러 핸들러

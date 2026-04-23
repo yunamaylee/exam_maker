@@ -75,3 +75,18 @@ export async function generateExam({
 
   return response.json()
 }
+
+// 시험지 docx 다운로드
+export async function downloadExam({ examId }: { examId: string }) {
+  const response = await fetch(`${BASE_URL}/api/v1/exam/${examId}/download`)
+  
+  if (!response.ok) throw new Error('다운로드 실패')
+  
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `시험지_${examId}.docx`
+  a.click()
+  window.URL.revokeObjectURL(url)
+}

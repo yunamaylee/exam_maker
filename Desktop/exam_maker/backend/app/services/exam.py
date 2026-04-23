@@ -113,7 +113,7 @@ def generate_exam(
         # 시험지 생성
         message = client.messages.create(
             model="claude-opus-4-5",
-            max_tokens=4000,
+            max_tokens=16000,
             messages=[
                 {
                     "role": "user",
@@ -138,4 +138,22 @@ def generate_exam(
             e,
             code="SERVICE/EXAM/GENERATE_EXAM",
             message="시험지 생성 중 오류가 발생했습니다.",
+        )
+
+
+# 시험지 조회 함수
+def get_exam(
+    db: Session,
+    exam_id: str,
+) -> dict:
+    try:
+        return exam_repository.get_exam_result(
+            db=db,
+            exam_id=exam_id,
+        )
+    except Exception as e:
+        handle_service_error(
+            e,
+            code="SERVICE/EXAM/GET_EXAM",
+            message="시험지 조회 중 오류가 발생했습니다.",
         )
