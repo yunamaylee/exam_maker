@@ -35,6 +35,8 @@ export default function HomePage() {
 
     try {
       const result = await analyzeExam({ schoolName, file })
+      console.log('result:', result)
+      console.log('analysis_result:', result.analysis_result)
       setAnalysisId(result.analysis_id)
       setSchoolName(schoolName)
       setAnalysisResult(result.analysis_result)
