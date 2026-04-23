@@ -52,6 +52,7 @@ async def extract_exam_range(
         "passages": passages,
     }
 
+
 # 시험지 생성 함수
 @router.post("/generate")
 async def generate_exam(
