@@ -36,8 +36,8 @@ export default function ResultPage() {
     try {
       const result = await generateExam({
         analysisId: analysisId!,
-        passages,
-        options,
+        passages: passages!,
+        options: options!,
       })
       setExamResult(result.exam)
       setExamId(result.exam_id)
