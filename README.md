@@ -65,5 +65,3 @@ cd frontend
 npm install
 npm run dev
 ```
-
-API 문서는 `http://localhost:8000/docs` 에서 확인할 수 있습니다.
