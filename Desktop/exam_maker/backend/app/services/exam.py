@@ -4,7 +4,7 @@ import json
 import anthropic
 from sqlalchemy.orm import Session
 from app.core.config import ANTHROPIC_API_KEY
-from app.core.errors import handle_service_error
+from app.core.errors import AppError, handle_service_error
 from app.repositories import exam as exam_repository
 from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get_generate_exam_prompt
 
@@ -22,8 +22,12 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
         reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
         text = ""
         for page in reader.pages:
-            text += page.extract_text()
+            # extract_text()가 None을 반환할 수 있으므로 falsy한 값은 빈 문자열로 처리
+            page_text = page.extract_text()
+            text += page_text if page_text else ""
         return text
+    except AppError:
+        raise
     except Exception as e:
         handle_service_error(
             e,
@@ -39,7 +43,7 @@ def analyze_exam_pattern(
     pdf_text: str,
 ) -> dict:
     try:
-        # DB에 이미 분석 결과 있으면 재활용
+        # DB에 이미 분석 결과 있으면 재활용 (캐싱)
         existing = exam_repository.get_analysis_by_school_name(
             db=db,
             school_name=school_name,
@@ -47,7 +51,11 @@ def analyze_exam_pattern(
         if existing:
             return existing
 
-        # 없으면 Claude API 호출
+        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
+        if not pdf_text or not pdf_text.strip():
+            raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
+
+        # Claude Sonnet으로 출제 패턴 분석
         message = client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=2000,
@@ -64,6 +72,9 @@ def analyze_exam_pattern(
             school_name=school_name,
             analysis_result=analysis_result,
         )
+    except AppError:
+        # 레포에서 올라온 AppError는 재랩핑 없이 그대로 올림
+        raise
     except Exception as e:
         handle_service_error(
             e,
@@ -77,6 +88,11 @@ def extract_passages(
     pdf_text: str,
 ) -> dict:
     try:
+        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
+        if not pdf_text or not pdf_text.strip():
+            raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
+
+        # Claude Haiku로 순수 본문 추출 (듣기 제외)
         message = client.messages.create(
             model="claude-haiku-4-5",
             max_tokens=8000,
@@ -88,6 +104,8 @@ def extract_passages(
             ]
         )
         return json.loads(clean_json_response(message.content[0].text))
+    except AppError:
+        raise
     except Exception as e:
         handle_service_error(
             e,
@@ -110,7 +128,11 @@ def generate_exam(
             analysis_id=analysis_id,
         )
 
-        # 시험지 생성
+        # 지문이 비어있으면 비즈니스 예외 발생
+        if not passages:
+            raise ValueError("시험 범위 지문이 없습니다.")
+
+        # Claude Opus로 시험지 생성
         message = client.messages.create(
             model="claude-opus-4-5",
             max_tokens=16000,
@@ -133,6 +155,8 @@ def generate_exam(
             analysis_id=str(analysis.id),
             exam_content=exam_content,
         )
+    except AppError:
+        raise
     except Exception as e:
         handle_service_error(
             e,
@@ -151,6 +175,8 @@ def get_exam(
             db=db,
             exam_id=exam_id,
         )
+    except AppError:
+        raise
     except Exception as e:
         handle_service_error(
             e,

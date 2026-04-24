@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Stepper from '@/components/ui/Stepper'
 import FileUpload from '@/components/ui/FileUpload'
 import { useExamStore } from '@/stores/examStore'
 import { analyzeExam } from '@/services/examService'
+import { useAppRouter } from '@/hooks/useAppRouter'
 
 /**
  * 1단계: 기출 분석 페이지
  */
 export default function HomePage() {
   // hooks
-  const router = useRouter()
+  const router = useAppRouter()
   const { setAnalysisId, setSchoolName, setAnalysisResult } = useExamStore()
 
   // states
@@ -53,7 +53,7 @@ export default function HomePage() {
       {/* 헤더 */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-        <img src="/school.png" alt="logo" className="w-8 h-8 rounded-lg" />
+          <img src="/school.png" alt="logo" className="w-8 h-8 rounded-lg" />
           <span className="font-semibold">우리학교출제</span>
         </div>
         <span className="text-xs text-gray-400 border rounded px-2 py-1">Beta</span>
@@ -97,6 +97,7 @@ export default function HomePage() {
         {error && (
           <p className="text-sm text-red-500">{error}</p>
         )}
+
         {/* 분석 결과 */}
         {showResult && localResult && (
           <div className="flex flex-col gap-4 bg-blue-50 border border-blue-100 rounded-xl p-6">
@@ -131,14 +132,15 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
         {/* 다음 버튼 */}
         <button
-        onClick={showResult ? () => router.push('/range') : handleAnalyze}
-        disabled={(!schoolName || !file || isLoading) && !showResult}
-        className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
-      >
-        {isLoading ? '분석 중...' : showResult ? '다음 단계로' : '기출 분석 시작'}
-      </button>
+          onClick={showResult ? () => router.toRange() : handleAnalyze}
+          disabled={(!schoolName || !file || isLoading) && !showResult}
+          className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
+        >
+          {isLoading ? '분석 중...' : showResult ? '다음 단계로' : '기출 분석 시작'}
+        </button>
       </div>
     </main>
   )

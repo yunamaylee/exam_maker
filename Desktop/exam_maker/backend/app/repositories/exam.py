@@ -1,10 +1,10 @@
 import json
 from sqlalchemy.orm import Session
 from app.models.exam import ExamAnalysis, ExamResult
-from app.core.errors import create_repo_error
+from app.core.errors import AppError, create_repo_error, map_sqlalchemy_error
 
 
-# 분석 결과 저장
+# 시험 패턴 분석 결과 저장
 def save_analysis(
     db: Session,
     school_name: str,
@@ -19,16 +19,14 @@ def save_analysis(
         db.commit()
         db.refresh(analysis)
         return analysis
+    except AppError:
+        raise
     except Exception as e:
         db.rollback()
-        raise create_repo_error(
-            code="REPO/EXAM/SAVE_ANALYSIS",
-            message="분석 결과 저장 중 오류가 발생했습니다.",
-            cause=e,
-        )
+        raise map_sqlalchemy_error(e, "REPO/EXAM/SAVE_ANALYSIS")
 
 
-# 분석 결과 조회
+# 시험 패턴 분석 결과 조회
 def get_analysis(
     db: Session,
     analysis_id: str,
@@ -43,15 +41,13 @@ def get_analysis(
                 message="분석 결과를 찾을 수 없습니다.",
             )
         return analysis
+    except AppError:
+        raise
     except Exception as e:
-        raise create_repo_error(
-            code="REPO/EXAM/GET_ANALYSIS",
-            message="분석 결과 조회 중 오류가 발생했습니다.",
-            cause=e,
-        )
+        raise map_sqlalchemy_error(e, "REPO/EXAM/GET_ANALYSIS")
 
 
-# 학교 이름으로 분석 결과 조회 (캐싱용)
+# 학교명으로 시험 패턴 분석 결과 조회
 def get_analysis_by_school_name(
     db: Session,
     school_name: str,
@@ -60,15 +56,13 @@ def get_analysis_by_school_name(
         return db.query(ExamAnalysis).filter(
             ExamAnalysis.school_name == school_name
         ).first()
+    except AppError:
+        raise
     except Exception as e:
-        raise create_repo_error(
-            code="REPO/EXAM/GET_ANALYSIS_BY_SCHOOL",
-            message="학교 분석 결과 조회 중 오류가 발생했습니다.",
-            cause=e,
-        )
+        raise map_sqlalchemy_error(e, "REPO/EXAM/GET_ANALYSIS_BY_SCHOOL")
 
 
-# 시험지 저장
+# 시험지 생성 결과 저장
 def save_exam_result(
     db: Session,
     analysis_id: str,
@@ -77,22 +71,20 @@ def save_exam_result(
     try:
         exam_result = ExamResult(
             analysis_id=analysis_id,
-            exam_content=json.dumps(exam_content, ensure_ascii=False),  # dict → JSON 문자열
+            exam_content=json.dumps(exam_content, ensure_ascii=False),
         )
         db.add(exam_result)
         db.commit()
         db.refresh(exam_result)
         return exam_result
+    except AppError:
+        raise
     except Exception as e:
         db.rollback()
-        raise create_repo_error(
-            code="REPO/EXAM/SAVE_RESULT",
-            message="시험지 저장 중 오류가 발생했습니다.",
-            cause=e,
-        )
+        raise map_sqlalchemy_error(e, "REPO/EXAM/SAVE_RESULT")
 
 
-# 시험지 조회
+# 시험지 생성 결과 조회
 def get_exam_result(
     db: Session,
     exam_id: str,
@@ -107,9 +99,7 @@ def get_exam_result(
                 message="시험지를 찾을 수 없습니다.",
             )
         return exam
+    except AppError:
+        raise
     except Exception as e:
-        raise create_repo_error(
-            code="REPO/EXAM/GET_RESULT",
-            message="시험지 조회 중 오류가 발생했습니다.",
-            cause=e,
-        )
+        raise map_sqlalchemy_error(e, "REPO/EXAM/GET_RESULT")

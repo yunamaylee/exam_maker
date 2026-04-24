@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Stepper from '@/components/ui/Stepper'
 import { useExamStore } from '@/stores/examStore'
+import { useAppRouter } from '@/hooks/useAppRouter'
 
 // constants
 const MC_TYPES = [
@@ -29,7 +29,7 @@ const SUBJECTIVE_TYPES = [
  */
 export default function SettingsPage() {
   // hooks
-  const router = useRouter()
+  const router = useAppRouter()
   const { setOptions, analysisResult } = useExamStore()
 
   // states
@@ -54,11 +54,7 @@ export default function SettingsPage() {
 
       if (hasMC && !hasSub) setSubjective(0)
       if (hasSub && !hasMC) setMultipleChoice(0)
-      if (hasMC && hasSub) {
-        // 둘 다 선택되면 슬라이더 유지
-      }
       if (!hasMC && !hasSub) {
-        // 아무것도 선택 안 하면 기본값 복원
         setMultipleChoice(analysisResult?.exam_meta?.multiple_choice?.count ?? 25)
         setSubjective(analysisResult?.exam_meta?.subjective?.count ?? 5)
       }
@@ -74,7 +70,7 @@ export default function SettingsPage() {
       difficulty,
       question_types: selectedTypes,
     })
-    router.push('/result')
+    router.toResult()
   }
 
   // render

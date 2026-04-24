@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Stepper from '@/components/ui/Stepper'
 import FileUpload from '@/components/ui/FileUpload'
 import { useExamStore } from '@/stores/examStore'
 import { extractRange } from '@/services/examService'
+import { useAppRouter } from '@/hooks/useAppRouter'
 
 /**
  * 2단계: 시험 범위 페이지
  */
 export default function RangePage() {
   // hooks
-  const router = useRouter()
+  const router = useAppRouter()
   const { setPassages } = useExamStore()
 
   // states
@@ -37,7 +37,7 @@ export default function RangePage() {
     try {
       const result = await extractRange({ files })
       setPassages(result.passages)
-      router.push('/settings')
+      router.toSettings()
     } catch (e) {
       setError('시험 범위 추출 중 오류가 발생했습니다. 다시 시도해주세요.')
     } finally {
