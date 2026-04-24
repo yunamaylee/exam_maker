@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.exam import ExamAnalysis, ExamResult
@@ -36,8 +35,7 @@ def get_analysis(
         analysis = db.query(ExamAnalysis).filter(
             ExamAnalysis.id == analysis_id
         ).first()
-        if not analysis:
-            raise create_repo_error(
+        if not error(
                 code="REPO/EXAM/NOT_FOUND",
                 message="분석 결과를 찾을 수 없습니다.",
             )
@@ -72,13 +70,11 @@ def save_exam_result(
     try:
         exam_result = ExamResult(
             analysis_id=analysis_id,
-            exam_content=json.dumps(exam_content, ensure_ascii=False),
+            exam_content=exam_content,
         )
         db.add(exam_result)
         db.commit()
-        db.refresh(exam_result)
-        return exam_result
-    except AppError:
+       
         raise
     except Exception as e:
         db.rollback()

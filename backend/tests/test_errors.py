@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock, patch
 from app.core.errors import (
     AppError,
     create_repo_error,
@@ -28,11 +29,7 @@ def test_get_display_message_with_slash_code():
 
 # get_display_message 알 수 없는 코드 테스트
 def test_get_display_message_unknown_code():
-    message = get_display_message("UNKNOWN/CODE")
-    assert message == "알 수 없는 오류가 발생했습니다."
-
-
-# handle_service_error AppError 재랩핑 방지 테스트
+    me지 테스트
 def test_handle_service_error_no_rewrap():
     original = AppError(
         source="repository",
@@ -62,5 +59,45 @@ def test_map_sqlalchemy_error_default():
         Exception("unknown error"),
         code="REPO/EXAM/GET_ANALYSIS",
     )
-    assert error.code == "REPO/EXAM/GET_ANALYSIS"
-    assert error.source == "repository"
+    a
+
+
+# 서비스 레이어 - 캐싱 동작 테스트
+def test_analyze_exam_pattern_returns_cached_result():
+    from app.services.exam import analyze_exam_pattern
+    from app.models.exam import ExamAnalysis
+    import uuid
+
+    mock_db = MagicMock()
+    mock_analysis = ExamAnalysis(
+        id=uuid.uuid4(),
+        school_name="테스트고등학교",
+        analysis_result={"pattern": "test"},
+    )
+
+    with patch(
+        "app.repositories.exam.get_analysis_by_school_name",
+        return_value=mock_analysis,
+    ):
+        result = analyze_exam_pattern(
+            db=mock_db,
+            school_name="테스트고등학교",
+            pdf_text="시험 내용",
+        )
+        assert result == mock_analysis
+
+
+# 서비스 레이어 - 빈 PDF 텍스트 예외 테스트
+def test_analyze_exam_pattern_raises_on_empty_pdf():
+    from app.services.exam import analyze_exam_pattern
+
+    mock_db = MagicMock()
+
+    with patch(
+        "app.repositories.exam.get_analysis_by_school_name",
+        return_value=Non(
+                db=mock_db,
+                school_name="테스트고등학교",
+                pdf_text="",
+            )
+        assert exc_info.value.source == "service"
