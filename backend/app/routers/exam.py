@@ -1,4 +1,3 @@
-import json
 import io
 from typing import List
 from fastapi import APIRouter, UploadFile, File, Depends
@@ -20,34 +19,29 @@ async def analyze_exam(
     db: Session = Depends(get_db),
 ):
     pdf_bytes = await file.read()
-    pdf_text = exam_service.extract_pdf_text(pdf_bytes)
-    analysis = exam_service.analyze_exam_pattern(
+    # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
+    analysis = exam_service.analyze_exam_from_pdf(
         db=db,
         school_name=school_name,
-        pdf_text=pdf_text,
+        pdf_bytes=pdf_bytes,
     )
     return {
         "success": True,
         "analysis_id": str(analysis.id),
-        "analysis_result": analysis.analysis_result if isinstance(analysis.analysis_result, dict) else json.loads(analysis.analysis_result),
-        "message": "기출 분석이 완료됐습니다.",
-    }
-
-
-# 시험 범위 본문 추출
-@router.post("/range")
+        "analysis_result": analysis.analysis_result,
+        .post("/range")
 async def extract_exam_range(
     files: List[UploadFile] = File(...),
 ):
-    all_text = ""
+    all_passages = {}
     for file in files:
         pdf_bytes = await file.read()
-        pdf_text = exam_service.extract_pdf_text(pdf_bytes)
-        all_text += f"\n\n{pdf_text}"
-    passages = exam_service.extract_passages(all_text)
+        # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
+        passages = exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
+        all_passages.update(passages)
     return {
         "success": True,
-        "passages": passages,
+        "passages": all_passages,
     }
 
 
@@ -75,9 +69,7 @@ async def generate_exam(
 @router.get("/{exam_id}/download")
 async def download_exam(
     exam_id: str,
-    db: Session = Depends(get_db),
-):
-    exam = exam_service.get_exam(
+(
         db=db,
         exam_id=exam_id,
     )

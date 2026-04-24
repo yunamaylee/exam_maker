@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Text, DateTime, JSON
+from sqlalchemy import Column, String, Text, DateTime, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from app.models.base import Base
 from datetime import datetime, timezone
 import uuid
@@ -18,12 +19,21 @@ class ExamAnalysis(Base):
     analysis_result = Column(JSON, nullable=False)  # 상세 분석 예정으로 JSON 형식 저장
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
+    # 관계 정의
+    exam_results = relationship("ExamResult", back_populates="analysis")
+
 
 # 시험 분석 결과 모델
 class ExamResult(Base):
     __tablename__ = "exam_result"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    analysis_id = Column(UUID(as_uuid=True), nullable=False)
-    exam_content = Column(Text, nullable=False)
+    analysis_id = Column(
+        UUID(ae="CASCADE"),
+        nullable=False,
+    )
+    exam_content = Column(JSON, nullable=False)  # Text → JSON으로 통일
     created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    # 관계 정의
+    analysis = relationship("ExamAnalysis", back_populates="exam_results")
