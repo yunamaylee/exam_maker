@@ -72,3 +72,16 @@ def handle_service_error(
 
 def get_display_message(code: str) -> str:
     return ERROR_DISPLAY_MESSAGES.get(code, DEFAULT_DISPLAY_MESSAGE)
+
+def map_sqlalchemy_error(
+    error: Exception,
+    code: str,
+    context: Optional[dict[str, Any]] = None,
+) -> AppError:
+    return AppError(
+        source="repository",
+        code=code,
+        message=str(error),
+        cause=error,
+        context=context,
+    )
