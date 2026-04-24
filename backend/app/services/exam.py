@@ -24,6 +24,20 @@ def normalize_school_name(school_name: str) -> str:
     return school_name.strip()
 
 
+# Claude API 응답을 JSON으로 안전하게 파싱
+# LLM이 JSON이 아닌 응답을 줄 경우 서비스 예외로 변환
+def parse_claude_response(text: str, code: str) -> dict:
+    try:
+        return json.loads(clean_json_response(text))
+    except json.JSONDecodeError as e:
+        raise AppError(
+            source="service",
+            code=code,
+            message="AI 응답을 파싱하는 중 오류가 발생했습니다.",
+            cause=e,
+        )
+
+
 # PDF 바이트에서 텍스트 추출 후 패턴 분석까지 수행 (라우터 진입점)
 async def analyze_exam_from_pdf(
     db: Session,
@@ -85,18 +99,30 @@ async def analyze_exam_pattern(
 
         client = get_anthropic_client()
 
-        # Claude Sonnet으로 출제 패턴 분석
-        message = await client.messages.create(
-            model="claude-sonnet-4-5",
-            max_tokens=2000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"{ANALYZE_SCHOOL_PROMPT}\n\n학교명: {normalized_name}\n\n시험지 내용:\n{pdf_text}"
-                }
-            ]
+        try:
+            # Claude Sonnet으로 출제 패턴 분석
+            message = await client.messages.create(
+                model="claude-sonnet-4-5",
+                max_tokens=2000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"{ANALYZE_SCHOOL_PROMPT}\n\n학교명: {normalized_name}\n\n시험지 내용:\n{pdf_text}"
+                    }
+                ]
+            )
+        except anthropic.APIError as e:
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/CLAUDE_API_ERROR",
+                message="AI 서비스 호출 중 오류가 발생했습니다.",
+                cause=e,
+            )
+
+        analysis_result = parse_claude_response(
+            message.content[0].text,
+            code="SERVICE/EXAM/ANALYZE_PARSE_ERROR",
         )
-        analysis_result = json.loads(clean_json_response(message.content[0].text))
         return exam_repository.save_analysis(
             db=db,
             school_name=normalized_name,
@@ -123,18 +149,30 @@ async def extract_passages(
 
         client = get_anthropic_client()
 
-        # Claude Haiku로 순수 본문 추출 (듣기 제외)
-        message = await client.messages.create(
-            model="claude-haiku-4-5",
-            max_tokens=8000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"{EXTRACT_PASSAGES_PROMPT}\n\n시험 범위 내용:\n{pdf_text}"
-                }
-            ]
+        try:
+            # Claude Haiku로 순수 본문 추출 (듣기 제외)
+            message = await client.messages.create(
+                model="claude-haiku-4-5",
+                max_tokens=8000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"{EXTRACT_PASSAGES_PROMPT}\n\n시험 범위 내용:\n{pdf_text}"
+                    }
+                ]
+            )
+        except anthropic.APIError as e:
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/CLAUDE_API_ERROR",
+                message="AI 서비스 호출 중 오류가 발생했습니다.",
+                cause=e,
+            )
+
+        return parse_claude_response(
+            message.content[0].text,
+            code="SERVICE/EXAM/PASSAGES_PARSE_ERROR",
         )
-        return json.loads(clean_json_response(message.content[0].text))
     except AppError:
         raise
     except Exception as e:
@@ -165,22 +203,34 @@ async def generate_exam(
 
         client = get_anthropic_client()
 
-        # Claude Opus로 시험지 생성
-        message = await client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=16000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": get_generate_exam_prompt(
-                        school_profile=json.dumps(analysis.analysis_result, ensure_ascii=False),
-                        passages=json.dumps(passages, ensure_ascii=False),
-                        options=json.dumps(options, ensure_ascii=False),
-                    )
-                }
-            ]
+        try:
+            # Claude Opus로 시험지 생성
+            message = await client.messages.create(
+                model="claude-opus-4-5",
+                max_tokens=16000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": get_generate_exam_prompt(
+                            school_profile=json.dumps(analysis.analysis_result, ensure_ascii=False),
+                            passages=json.dumps(passages, ensure_ascii=False),
+                            options=json.dumps(options, ensure_ascii=False),
+                        )
+                    }
+                ]
+            )
+        except anthropic.APIError as e:
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/CLAUDE_API_ERROR",
+                message="AI 서비스 호출 중 오류가 발생했습니다.",
+                cause=e,
+            )
+
+        exam_content = parse_claude_response(
+            message.content[0].text,
+            code="SERVICE/EXAM/GENERATE_PARSE_ERROR",
         )
-        exam_content = json.loads(clean_json_response(message.content[0].text))
 
         # DB 저장
         return exam_repository.save_exam_result(
