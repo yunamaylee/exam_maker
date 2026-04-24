@@ -17,6 +17,7 @@ class ExamOptions(BaseModel):
     multiple_choice: int
     subjective: int
     difficulty: Optional[str] = None
+    question_types: List[str] = []
 
 
 class GenerateExamRequest(BaseModel):
