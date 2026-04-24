@@ -1,4 +1,5 @@
 import json
+import re
 import anthropic
 from sqlalchemy.orm import Session
 from app.core.config import ANTHROPIC_API_KEY
@@ -19,9 +20,11 @@ def clean_json_response(text: str) -> str:
 
 
 # 학교명 정규화 유틸
-# 대소문자, 공백 등 사용자 입력 불일치로 인한 캐시 미스 방지
+# - 앞뒤 공백 제거
+# - 내부 공백 단일화 (연속 공백 → 단일 공백)
+# - 예: "서울  고등학교 " → "서울 고등학교"
 def normalize_school_name(school_name: str) -> str:
-    return school_name.strip()
+    return re.sub(r'\s+', ' ', school_name).strip()
 
 
 # Claude API 응답을 JSON으로 안전하게 파싱
@@ -81,7 +84,7 @@ async def analyze_exam_pattern(
     pdf_text: str,
 ) -> ExamAnalysis:
     try:
-        # 학교명 정규화 (공백 제거 등)
+        # 학교명 정규화 (앞뒤 공백 제거, 내부 연속 공백 단일화)
         normalized_name = normalize_school_name(school_name)
 
         # DB에 이미 분석 결과 있으면 재활용
