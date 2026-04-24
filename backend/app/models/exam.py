@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, String, DateTime, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.models.base import Base
@@ -29,7 +29,7 @@ class ExamResult(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     analysis_id = Column(
-        UUID(ae="CASCADE"),
+        UUID(as_uuidCADE"),
         nullable=False,
     )
     exam_content = Column(JSON, nullable=False)  # Text → JSON으로 통일
