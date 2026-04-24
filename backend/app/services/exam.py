@@ -1,5 +1,3 @@
-import pypdf
-import io
 import json
 import anthropic
 from sqlalchemy.orm import Session
@@ -7,6 +5,7 @@ from app.core.config import ANTHROPIC_API_KEY
 from app.core.errors import AppError, handle_service_error
 from app.repositories import exam as exam_repository
 from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get_generate_exam_prompt
+from app.utils.pdf import extract_pdf_text
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -14,26 +13,6 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 # JSON 코드블록 제거 유틸
 def clean_json_response(text: str) -> str:
     return text.replace("```json", "").replace("```", "").strip()
-
-
-# PDF 텍스트 추출 함수
-def extract_pdf_text(pdf_bytes: bytes) -> str:
-    try:
-        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-        text = ""
-        for page in reader.pages:
-            # extract_text()가 None을 반환할 수 있으므로 falsy한 값은 빈 문자열로 처리
-            page_text = page.extract_text()
-            text += page_text if page_text else ""
-        return text
-    except AppError:
-        raise
-    except Exception as e:
-        handle_service_error(
-            e,
-            code="SERVICE/EXAM/EXTRACT_PDF",
-            message="PDF 텍스트 추출 중 오류가 발생했습니다.",
-        )
 
 
 # 시험 패턴 분석 함수
@@ -44,6 +23,7 @@ def analyze_exam_pattern(
 ) -> dict:
     try:
         # DB에 이미 분석 결과 있으면 재활용 (캐싱)
+        # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
         existing = exam_repository.get_analysis_by_school_name(
             db=db,
             school_name=school_name,

@@ -9,6 +9,8 @@ ERROR_DISPLAY_MESSAGES: dict[str, str] = {
     "VALIDATION_ERROR": "입력값이 올바르지 않습니다.",
     "INTERNAL_ERROR": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
     "DUPLICATE": "이미 존재하는 데이터입니다.",
+    "DB_CONNECTION_ERROR": "데이터베이스 연결 오류가 발생했습니다.",
+    "DATA_ERROR": "잘못된 데이터 형식입니다.",
 }
 
 DEFAULT_DISPLAY_MESSAGE = "알 수 없는 오류가 발생했습니다."
@@ -60,7 +62,7 @@ def handle_service_error(
 ) -> None:
     if isinstance(error, AppError):
         raise error
-        
+
     raise AppError(
         source="service",
         code=code,
@@ -71,7 +73,9 @@ def handle_service_error(
 
 
 def get_display_message(code: str) -> str:
-    return ERROR_DISPLAY_MESSAGES.get(code, DEFAULT_DISPLAY_MESSAGE)
+    last_segment = code.split("/")[-1]
+    return ERROR_DISPLAY_MESSAGES.get(last_segment, DEFAULT_DISPLAY_MESSAGE)
+
 
 def map_sqlalchemy_error(
     error: Exception,
@@ -91,7 +95,7 @@ def map_sqlalchemy_error(
         return AppError(
             source="repository",
             code="REPO/DB_CONNECTION_ERROR",
-      베이 오류가 발생했습니다.",
+            message="데이터베이스 연결 오류가 발생했습니다.",
             cause=error,
             context=context,
         )

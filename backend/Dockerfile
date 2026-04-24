@@ -25,4 +25,4 @@ ENV PATH=/root/.local/bin:$PATH
 EXPOSE 8000
 
 # 서버 실행 (마이그레이션 포함)
-CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
