@@ -1,19 +1,48 @@
-# exam_maker
+<div align="center">
+  <img width="330" height="250" alt="Image" src="https://github.com/user-attachments/assets/d6438bdb-f501-4123-9047-93e91a78fb44" />
+</div>
 
-학교 기출을 분석해 새로운 시험지를 자동으로 만들어주는 서비스
+# 우리학교출제
 
-> AI를 활용해 빠르게 구현하되, 설계 원칙을 지키며 확장 가능한 구조로 짭니다.
+학교 기출을 분석해,
 
-🔗 **[서비스 바로가기](https://exam-maker-alpha.vercel.app)**
+학교 선생님의 출제 스타일로,
+
+새로운 시험지를 자동으로 만들어주는 서비스
+
+**[우리학교출제🔗](https://exam-maker-alpha.vercel.app)**
+
+---
+## 서비스 제작 의도
+
+사교육을 다니지 않는 학생들도 
+변형문제를 쉽게 얻을 수 있도록 제작하였음.
+
 
 ---
 
 ## 서비스 플로우
 
 1. **기출 분석** — 학교 기출 PDF 업로드 → Claude Sonnet으로 출제 패턴 분석
+
+<img width="1000" height="500" alt="Image" src="https://github.com/user-attachments/assets/658867d9-2b49-4931-b9e3-f26b9143c454" />
+<br/>
+<br/>
+<br/>
+
 2. **시험 범위 입력** — 시험 범위 PDF 업로드 (다중 파일) → Claude Haiku로 순수 본문 추출
+
+<img width="1000" height="500" alt="Image" src="https://github.com/user-attachments/assets/45cc9bd2-7fa4-41aa-ab25-3f4225380d47" />
+<br/>
+<br/>
+<br/>
 3. **문제 설정** — 문제 수, 난이도, 출제 유형 선택
+<img width="1000" height="500" alt="Image" src="https://github.com/user-attachments/assets/6c673c81-8008-4d77-ab4c-10a0c821684d" />
+<br/>
+<br/>
+<br/>
 4. **시험지 생성** — Claude Opus로 시험지 생성 → docx 다운로드
+<img width="474" height="376" alt="화면 기록 2026-04-24 오후 2 51 34 (1)" src="https://github.com/user-attachments/assets/76362578-4d9e-4c3b-8ea8-9af4a7f7a39b" />
 
 ---
 
