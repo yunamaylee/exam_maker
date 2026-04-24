@@ -8,8 +8,8 @@ from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get
 from app.utils.pdf import extract_pdf_text
 
 
-def get_anthropic_client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+def get_anthropic_client() -> anthropic.AsyncAnthropic:
+    return anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
 
 # JSON 코드블록 제거 유틸
@@ -18,14 +18,14 @@ def clean_json_response(text: str) -> str:
 
 
 # PDF 바이트에서 텍스트 추출 후 패턴 분석까지 수행 (라우터 진입점)
-def analyze_exam_from_pdf(
+async def analyze_exam_from_pdf(
     db: Session,
     school_name: str,
     pdf_bytes: bytes,
 ) -> dict:
     try:
         pdf_text = extract_pdf_text(pdf_bytes)
-        return analyze_exam_pattern(db=db, school_name=school_name, pdf_text=pdf_text)
+        return await analyze_exam_pattern(db=db, school_name=school_name, pdf_text=pdf_text)
     except AppError:
         raise
     except Exception as e:
@@ -37,12 +37,12 @@ def analyze_exam_from_pdf(
 
 
 # 시험 범위 PDF에서 지문 추출 (라우터 진입점)
-def extract_passages_from_pdf(
+async def extract_passages_from_pdf(
     pdf_bytes: bytes,
 ) -> dict:
     try:
         pdf_text = extract_pdf_text(pdf_bytes)
-        return extract_passages(pdf_text=pdf_text)
+        return await extract_passages(pdf_text=pdf_text)
     except AppError:
         raise
     except Exception as e:
@@ -54,13 +54,13 @@ def extract_passages_from_pdf(
 
 
 # 시험 패턴 분석 함수
-def analyze_exam_pattern(
+async def analyze_exam_pattern(
     db: Session,
     school_name: str,
     pdf_text: str,
 ) -> dict:
     try:
-        # DB에 이미 분석 결과 있으면 재활용 (캐싱)
+        # DB에 이미 분석 결과 있으면 재활용
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
         existing = exam_repository.get_analysis_by_school_name(
             db=db,
@@ -76,7 +76,7 @@ def analyze_exam_pattern(
         client = get_anthropic_client()
 
         # Claude Sonnet으로 출제 패턴 분석
-        message = client.messages.create(
+        message = await client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=2000,
             messages=[
@@ -103,7 +103,7 @@ def analyze_exam_pattern(
 
 
 # 시험 범위 본문 추출 함수
-def extract_passages(
+async def extract_passages(
     pdf_text: str,
 ) -> dict:
     try:
@@ -114,7 +114,7 @@ def extract_passages(
         client = get_anthropic_client()
 
         # Claude Haiku로 순수 본문 추출 (듣기 제외)
-        message = client.messages.create(
+        message = await client.messages.create(
             model="claude-haiku-4-5",
             max_tokens=8000,
             messages=[
@@ -136,7 +136,7 @@ def extract_passages(
 
 
 # 시험지 생성 함수
-def generate_exam(
+async def generate_exam(
     db: Session,
     analysis_id: str,
     passages: dict,
@@ -156,7 +156,7 @@ def generate_exam(
         client = get_anthropic_client()
 
         # Claude Opus로 시험지 생성
-        message = client.messages.create(
+        message = await client.messages.create(
             model="claude-opus-4-5",
             max_tokens=16000,
             messages=[
@@ -189,7 +189,7 @@ def generate_exam(
 
 
 # 시험지 조회 함수
-def get_exam(
+async def get_exam(
     db: Session,
     exam_id: str,
 ) -> dict:

@@ -11,6 +11,7 @@ from app.schemas.exam import GenerateExamRequest
 router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 
 
+# 시험 패턴 분석
 @router.post("/analyze")
 async def analyze_exam(
     school_name: str,
@@ -18,7 +19,8 @@ async def analyze_exam(
     db: Session = Depends(get_db),
 ):
     pdf_bytes = await file.read()
-    analysis = exam_service.analyze_exam_from_pdf(
+    # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
+    analysis = await exam_service.analyze_exam_from_pdf(
         db=db,
         school_name=school_name,
         pdf_bytes=pdf_bytes,
@@ -31,6 +33,7 @@ async def analyze_exam(
     }
 
 
+# 시험 범위 본문 추출
 @router.post("/range")
 async def extract_exam_range(
     files: List[UploadFile] = File(...),
@@ -38,7 +41,8 @@ async def extract_exam_range(
     all_passages = {}
     for file in files:
         pdf_bytes = await file.read()
-        passages = exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
+        # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
+        passages = await exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
         all_passages.update(passages)
     return {
         "success": True,
@@ -46,13 +50,14 @@ async def extract_exam_range(
     }
 
 
+# 시험지 생성
 @router.post("/generate")
 async def generate_exam(
     analysis_id: str,
     request: GenerateExamRequest,
     db: Session = Depends(get_db),
 ):
-    exam = exam_service.generate_exam(
+    exam = await exam_service.generate_exam(
         db=db,
         analysis_id=analysis_id,
         passages=request.passages.dict(),
@@ -65,12 +70,13 @@ async def generate_exam(
     }
 
 
+# 시험지 docx 다운로드
 @router.get("/{exam_id}/download")
 async def download_exam(
     exam_id: str,
     db: Session = Depends(get_db),
 ):
-    exam = exam_service.get_exam(
+    exam = await exam_service.get_exam(
         db=db,
         exam_id=exam_id,
     )
