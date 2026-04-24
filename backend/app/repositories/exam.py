@@ -1,12 +1,13 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.exam import ExamAnalysis, ExamResult
 from app.core.errors import AppError, create_repo_error, map_sqlalchemy_error
 
 
 # 시험 패턴 분석 결과 저장
-def save_analysis(
-    db: Session,
+async def save_analysis(
+    db: AsyncSession,
     school_name: str,
     analysis_result: dict,
 ) -> ExamAnalysis:
@@ -16,25 +17,26 @@ def save_analysis(
             analysis_result=analysis_result,
         )
         db.add(analysis)
-        db.commit()
-        db.refresh(analysis)
+        await db.commit()
+        await db.refresh(analysis)
         return analysis
     except AppError:
         raise
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise map_sqlalchemy_error(e, "REPO/EXAM/SAVE_ANALYSIS")
 
 
 # 시험 패턴 분석 결과 조회
-def get_analysis(
-    db: Session,
+async def get_analysis(
+    db: AsyncSession,
     analysis_id: str,
 ) -> ExamAnalysis:
     try:
-        analysis = db.query(ExamAnalysis).filter(
-            ExamAnalysis.id == analysis_id
-        ).first()
+        result = await db.execute(
+            select(ExamAnalysis).where(ExamAnalysis.id == analysis_id)
+        )
+        analysis = result.scalar_one_or_none()
         if not analysis:
             raise create_repo_error(
                 code="REPO/EXAM/NOT_FOUND",
@@ -48,14 +50,15 @@ def get_analysis(
 
 
 # 학교명으로 시험 패턴 분석 결과 조회
-def get_analysis_by_school_name(
-    db: Session,
+async def get_analysis_by_school_name(
+    db: AsyncSession,
     school_name: str,
 ) -> Optional[ExamAnalysis]:
     try:
-        return db.query(ExamAnalysis).filter(
-            ExamAnalysis.school_name == school_name
-        ).first()
+        result = await db.execute(
+            select(ExamAnalysis).where(ExamAnalysis.school_name == school_name)
+        )
+        return result.scalar_one_or_none()
     except AppError:
         raise
     except Exception as e:
@@ -63,8 +66,8 @@ def get_analysis_by_school_name(
 
 
 # 시험지 생성 결과 저장
-def save_exam_result(
-    db: Session,
+async def save_exam_result(
+    db: AsyncSession,
     analysis_id: str,
     exam_content: dict,
 ) -> ExamResult:
@@ -74,25 +77,26 @@ def save_exam_result(
             exam_content=exam_content,
         )
         db.add(exam_result)
-        db.commit()
-        db.refresh(exam_result)
+        await db.commit()
+        await db.refresh(exam_result)
         return exam_result
     except AppError:
         raise
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise map_sqlalchemy_error(e, "REPO/EXAM/SAVE_RESULT")
 
 
 # 시험지 생성 결과 조회
-def get_exam_result(
-    db: Session,
+async def get_exam_result(
+    db: AsyncSession,
     exam_id: str,
 ) -> ExamResult:
     try:
-        exam = db.query(ExamResult).filter(
-            ExamResult.id == exam_id
-        ).first()
+        result = await db.execute(
+            select(ExamResult).where(ExamResult.id == exam_id)
+        )
+        exam = result.scalar_one_or_none()
         if not exam:
             raise create_repo_error(
                 code="REPO/EXAM/RESULT_NOT_FOUND",

@@ -1,22 +1,36 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from typing import AsyncGenerator
 from app.core.config import DATABASE_URL
 
-# engine과 SessionLocal을 함수로 감싸서 import 시점에 DB 연결 방지
-# 테스트 환경에서 DATABASE_URL이 없어도 import 가능
+# PostgreSQL async URL로 변환 (postgresql:// → postgresql+asyncpg://)
+def get_async_database_url() -> str:
+    return DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+
+
+# async engine 생성
 def get_engine():
-    return create_engine(DATABASE_URL)
+    return create_async_engine(
+        get_async_database_url(),
+        echo=False,
+    )
 
 
+# async session factory
 def get_session_local():
-    return sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return async_sessionmaker(
+        bind=get_engine(),
+        class_=AsyncSession,
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
+    )
 
 
-def get_db() -> Generator[Session, None, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     SessionLocal = get_session_local()
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    async with SessionLocal() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise

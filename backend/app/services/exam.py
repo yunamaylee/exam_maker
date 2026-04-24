@@ -1,7 +1,7 @@
 import json
 import re
 import anthropic
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import ANTHROPIC_API_KEY
 from app.core.errors import AppError, handle_service_error
 from app.repositories import exam as exam_repository
@@ -43,7 +43,7 @@ def parse_claude_response(text: str, code: str) -> dict:
 
 # PDF 바이트에서 텍스트 추출 후 패턴 분석까지 수행 (라우터 진입점)
 async def analyze_exam_from_pdf(
-    db: Session,
+    db: AsyncSession,
     school_name: str,
     pdf_bytes: bytes,
 ) -> ExamAnalysis:
@@ -79,7 +79,7 @@ async def extract_passages_from_pdf(
 
 # 시험 패턴 분석 함수
 async def analyze_exam_pattern(
-    db: Session,
+    db: AsyncSession,
     school_name: str,
     pdf_text: str,
 ) -> ExamAnalysis:
@@ -89,7 +89,7 @@ async def analyze_exam_pattern(
 
         # DB에 이미 분석 결과 있으면 재활용
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
-        existing = exam_repository.get_analysis_by_school_name(
+        existing = await exam_repository.get_analysis_by_school_name(
             db=db,
             school_name=normalized_name,
         )
@@ -126,7 +126,7 @@ async def analyze_exam_pattern(
             message.content[0].text,
             code="SERVICE/EXAM/ANALYZE_PARSE_ERROR",
         )
-        return exam_repository.save_analysis(
+        return await exam_repository.save_analysis(
             db=db,
             school_name=normalized_name,
             analysis_result=analysis_result,
@@ -188,14 +188,14 @@ async def extract_passages(
 
 # 시험지 생성 함수
 async def generate_exam(
-    db: Session,
+    db: AsyncSession,
     analysis_id: str,
     passages: dict,
     options: dict,
 ) -> ExamResult:
     try:
         # 분석 결과 조회
-        analysis = exam_repository.get_analysis(
+        analysis = await exam_repository.get_analysis(
             db=db,
             analysis_id=analysis_id,
         )
@@ -236,7 +236,7 @@ async def generate_exam(
         )
 
         # DB 저장
-        return exam_repository.save_exam_result(
+        return await exam_repository.save_exam_result(
             db=db,
             analysis_id=str(analysis.id),
             exam_content=exam_content,
@@ -253,11 +253,11 @@ async def generate_exam(
 
 # 시험지 조회 함수
 async def get_exam(
-    db: Session,
+    db: AsyncSession,
     exam_id: str,
 ) -> ExamResult:
     try:
-        return exam_repository.get_exam_result(
+        return await exam_repository.get_exam_result(
             db=db,
             exam_id=exam_id,
         )
