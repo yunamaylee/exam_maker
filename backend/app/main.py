@@ -12,10 +12,14 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 서버 시작 시
+    # 서버 시작 시 DB 연결 확인
+    from app.dependencies import engine
+    async with engine.begin() as conn:
+        logger.info("DB 연결 확인 완료")
     logger.info("exam_maker 서버 시작!")
     yield
-    # 서버 종료 시
+    # 서버 종료 시 엔진 정리
+    await engine.dispose()
     logger.info("exam_maker 서버 종료!")
 
 
@@ -46,8 +50,6 @@ ERROR_STATUS_MAP: dict[str, int] = {
 
 
 def get_http_status(code: str) -> int:
-    # 슬래시 계층형 코드에서 마지막 세그먼트 추출
-    # 예: "REPO/EXAM/NOT_FOUND" → "NOT_FOUND" → 404
     last_segment = code.split("/")[-1]
     return ERROR_STATUS_MAP.get(last_segment, 400)
 

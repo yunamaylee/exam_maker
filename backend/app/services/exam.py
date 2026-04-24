@@ -96,9 +96,13 @@ async def analyze_exam_pattern(
         if existing:
             return existing
 
-        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
+        # PDF 텍스트가 비어있으면 사용자 입력 오류로 처리
         if not pdf_text or not pdf_text.strip():
-            raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/EMPTY_PDF",
+                message="PDF에서 텍스트를 추출할 수 없습니다.",
+            )
 
         client = get_anthropic_client()
 
@@ -146,9 +150,13 @@ async def extract_passages(
     pdf_text: str,
 ) -> dict:
     try:
-        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
+        # PDF 텍스트가 비어있으면 사용자 입력 오류로 처리
         if not pdf_text or not pdf_text.strip():
-            raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/EMPTY_PDF",
+                message="PDF에서 텍스트를 추출할 수 없습니다.",
+            )
 
         client = get_anthropic_client()
 
@@ -200,9 +208,13 @@ async def generate_exam(
             analysis_id=analysis_id,
         )
 
-        # 지문이 비어있으면 비즈니스 예외 발생
+        # 지문이 비어있으면 사용자 입력 오류로 처리
         if not passages:
-            raise ValueError("시험 범위 지문이 없습니다.")
+            raise AppError(
+                source="service",
+                code="SERVICE/EXAM/EMPTY_PASSAGES",
+                message="시험 범위 지문이 없습니다.",
+            )
 
         client = get_anthropic_client()
 

@@ -7,27 +7,24 @@ def get_async_database_url() -> str:
     return DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
 
-# async engine 생성
-def get_engine():
-    return create_async_engine(
-        get_async_database_url(),
-        echo=False,
-    )
+# 모듈 레벨에서 1회 초기화 (커넥션 풀 재사용)
+engine = create_async_engine(
+    get_async_database_url(),
+    echo=False,
+    pool_size=5,
+    max_overflow=10,
+)
 
-
-# async session factory
-def get_session_local():
-    return async_sessionmaker(
-        bind=get_engine(),
-        class_=AsyncSession,
-        autocommit=False,
-        autoflush=False,
-        expire_on_commit=False,
-    )
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    SessionLocal = get_session_local()
     async with SessionLocal() as session:
         try:
             yield session
