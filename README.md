@@ -3,6 +3,7 @@
 </div>
 
 # 우리학교출제
+<div align="center">
 
 학교 기출을 분석해,
 
@@ -11,6 +12,8 @@
 새로운 시험지를 자동으로 만들어주는 서비스
 
 **[우리학교출제🔗](https://exam-maker-alpha.vercel.app)**
+
+</div>
 
 ---
 ## 서비스 제작 의도
