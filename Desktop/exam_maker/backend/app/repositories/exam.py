@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.exam import ExamAnalysis, ExamResult
 from app.core.errors import AppError, create_repo_error, map_sqlalchemy_error
@@ -51,7 +52,7 @@ def get_analysis(
 def get_analysis_by_school_name(
     db: Session,
     school_name: str,
-) -> ExamAnalysis:
+) -> Optional[ExamAnalysis]:
     try:
         return db.query(ExamAnalysis).filter(
             ExamAnalysis.school_name == school_name

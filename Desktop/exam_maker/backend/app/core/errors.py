@@ -71,4 +71,5 @@ def handle_service_error(
 
 
 def get_display_message(code: str) -> str:
-    return ERROR_DISPLAY_MESSAGES.get(code, DEFAULT_DISPLAY_MESSAGE)
+    last_segment = code.split("/")[-1]
+    return ERROR_DISPLAY_MESSAGES.get(last_segment, DEFAULT_DISPLAY_MESSAGE)
