@@ -19,12 +19,12 @@
 
 ## 기술 스택
 
-| 영역 | 기술 |
-|------|------|
-| Backend | Python 3.9, FastAPI, SQLAlchemy, Alembic, PostgreSQL |
-| AI | Claude Sonnet (패턴 분석), Haiku (본문 추출), Opus (시험지 생성) |
-| Frontend | Next.js, TypeScript, Tailwind CSS, Zustand |
-| Deploy | Railway (백엔드 + DB), Vercel (프론트) |
+| Category | Stack |
+|----------|-------|
+| Backend | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white) ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat&logo=sqlalchemy&logoColor=white) |
+| Frontend | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=nextdotjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white) ![Zustand](https://img.shields.io/badge/Zustand-000000?style=flat&logo=react&logoColor=white) |
+| AI | ![Claude](https://img.shields.io/badge/Claude_API-D97757?style=flat&logo=anthropic&logoColor=white) |
+| Deploy | ![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat&logo=railway&logoColor=white) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) |
 
 ---
 
