@@ -19,7 +19,6 @@ async def analyze_exam(
     db: Session = Depends(get_db),
 ):
     pdf_bytes = await file.read()
-    # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
     analysis = exam_service.analyze_exam_from_pdf(
         db=db,
         school_name=school_name,
@@ -29,14 +28,16 @@ async def analyze_exam(
         "success": True,
         "analysis_id": str(analysis.id),
         "analysis_result": analysis.analysis_result,
-        .post("/range")
-async def extract_exam_range(
-    files: List[UploadFile] = File(...),
+        "message": "기출 분석이 완료됐습니다.",
+    }
+
+
+# 시험 범위 본문 추출
+@router.ples: List[UploadFile] = File(...),
 ):
     all_passages = {}
     for file in files:
         pdf_bytes = await file.read()
-        # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
         passages = exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
         all_passages.update(passages)
     return {
@@ -69,11 +70,13 @@ async def generate_exam(
 @router.get("/{exam_id}/download")
 async def download_exam(
     exam_id: str,
-(
+    db: Session = Depends(get_db),
+):
+    exam = exam_service.get_exam(
         db=db,
         exam_id=exam_id,
     )
-    docx_bytes = create_exam_docx(exam.exam_content)
+    docx_bytes = create_ent)
     return StreamingResponse(
         io.BytesIO(docx_bytes),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
