@@ -121,7 +121,7 @@ export default function ResultPage() {
             onClick={handleDownload}
             className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold transition-colors"
           >
-            📄 다시 다운로드
+            📄 다운로드
           </button>
           <button
             onClick={handleReset}

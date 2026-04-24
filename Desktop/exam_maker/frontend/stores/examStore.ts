@@ -32,6 +32,7 @@ type ExamStore = {
     multiple_choice: number
     subjective: number
     difficulty: string | null
+    question_types: string[]
   } | null
 
   // 4단계: 생성된 시험지

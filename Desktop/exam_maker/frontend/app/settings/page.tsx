@@ -5,6 +5,25 @@ import { useRouter } from 'next/navigation'
 import Stepper from '@/components/ui/Stepper'
 import { useExamStore } from '@/stores/examStore'
 
+// constants
+const MC_TYPES = [
+  '어법',
+  '어휘 (문맥에 맞지 않는 단어)',
+  '빈칸추론',
+  '주제/요지/제목',
+  '글의 순서',
+  '문장 삽입',
+  '흐름에 맞지 않는 문장',
+  '함축의미',
+]
+
+const SUBJECTIVE_TYPES = [
+  '조건영작',
+  '재진술영작',
+  '요약완성',
+  '어법설명',
+]
+
 /**
  * 3단계: 문제 설정 페이지
  */
@@ -21,13 +40,21 @@ export default function SettingsPage() {
     analysisResult?.exam_meta?.subjective?.count ?? 5
   )
   const [difficulty, setDifficulty] = useState<string | null>(null)
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
 
   // handlers
+  const handleTypeToggle = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    )
+  }
+
   const handleNext = () => {
     setOptions({
       multiple_choice: multipleChoice,
       subjective,
       difficulty,
+      question_types: selectedTypes,
     })
     router.push('/result')
   }
@@ -104,6 +131,48 @@ export default function SettingsPage() {
                   }`}
               >
                 {level}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 객관식 유형 선택 */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">객관식 유형 선택</label>
+          <p className="text-xs text-gray-400">선택하면 해당 유형만 출제해요. 선택 안 하면 학교 기출 유형대로</p>
+          <div className="flex flex-wrap gap-2">
+            {MC_TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => handleTypeToggle(type)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors
+                  ${selectedTypes.includes(type)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                  }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 서술형 유형 선택 */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">서술형 유형 선택</label>
+          <p className="text-xs text-gray-400">선택하면 해당 유형만 출제해요. 선택 안 하면 학교 기출 유형대로</p>
+          <div className="flex flex-wrap gap-2">
+            {SUBJECTIVE_TYPES.map((type) => (
+              <button
+                key={type}
+                onClick={() => handleTypeToggle(type)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors
+                  ${selectedTypes.includes(type)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                  }`}
+              >
+                {type}
               </button>
             ))}
           </div>
