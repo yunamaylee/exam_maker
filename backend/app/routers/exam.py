@@ -1,6 +1,6 @@
 import io
 from typing import List
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_db
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 # 시험 패턴 분석
 @router.post("/analyze", response_model=AnalyzeExamResponse)
 async def analyze_exam(
-    school_name: str,
+    school_name: str = Form(...),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
