@@ -36,7 +36,9 @@ app.include_router(exam_router.router)
 ERROR_STATUS_MAP: dict[str, int] = {
     "NOT_FOUND": 404,
     "UNAUTHORIZED": 401,
-    "FORBTE": 409,
+    "FORBIDDEN": 403,
+    "VALIDATION_ERROR": 422,
+    "DUPLICATE": 409,
     "INTERNAL_ERROR": 500,
     "DB_CONNECTION_ERROR": 503,
     "DATA_ERROR": 400,

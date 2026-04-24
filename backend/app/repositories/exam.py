@@ -75,7 +75,9 @@ def save_exam_result(
         )
         db.add(exam_result)
         db.commit()
-       
+        db.refresh(exam_result)
+        return exam_result
+    except AppError:
         raise
     except Exception as e:
         db.rollback()
