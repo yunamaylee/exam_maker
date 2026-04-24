@@ -18,11 +18,29 @@ app.add_middleware(
 
 app.include_router(exam_router.router)
 
+# 에러 코드 → HTTP status code 매핑
+ERROR_STATUS_MAP: dict[str, int] = {
+    "NOT_FOUND": 404,
+    "UNAUTHORIZED": 401,
+    "FORBIDDEN": 403,
+    "VALIDATION_ERROR": 422,
+    "DUPLICATE": 409,
+    "INTERNAL_ERROR": 500,
+    "DB_CONNECTION_ERROR": 503,
+    "DATA_ERROR": 400,
+}
+
+
+def get_http_status(code: str) -> int:
+    last_segment = code.split("/")[-1]
+    return ERROR_STATUS_MAP.get(last_segment, 400)
+
+
 # 에러 핸들러
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, error: AppError):
     return JSONResponse(
-        status_code=400,
+        status_code=get_http_status(error.code),
         content={
             "success": False,
             "message": get_display_message(error.code),
@@ -31,10 +49,12 @@ async def app_error_handler(request: Request, error: AppError):
         }
     )
 
+
 # 헬스체크
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
 
 @app.on_event("startup")
 async def startup():
