@@ -32,7 +32,8 @@ async def analyze_exam(
 
 
 @router.post("/range")
-async def extract_exam_rangoadFile] = File(...),
+async def extract_exam_range(
+    files: List[UploadFile] = File(...),
 ):
     all_passages = {}
     for file in files:
