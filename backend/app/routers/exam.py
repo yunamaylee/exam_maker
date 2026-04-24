@@ -6,13 +6,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_db
 from app.services import exam as exam_service
 from app.services.docx import create_exam_docx
-from app.schemas.exam import GenerateExamRequest
+from app.schemas.exam import (
+    GenerateExamRequest,
+    AnalyzeExamResponse,
+    ExtractPassagesResponse,
+    GenerateExamResponse,
+)
 
 router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 
 
 # 시험 패턴 분석
-@router.post("/analyze")
+@router.post("/analyze", response_model=AnalyzeExamResponse)
 async def analyze_exam(
     school_name: str,
     file: UploadFile = File(...),
@@ -24,16 +29,16 @@ async def analyze_exam(
         school_name=school_name,
         pdf_bytes=pdf_bytes,
     )
-    return {
-        "success": True,
-        "analysis_id": str(analysis.id),
-        "analysis_result": analysis.analysis_result,
-        "message": "기출 분석이 완료됐습니다.",
-    }
+    return AnalyzeExamResponse(
+        success=True,
+        analysis_id=str(analysis.id),
+        analysis_result=analysis.analysis_result,
+        message="기출 분석이 완료됐습니다.",
+    )
 
 
 # 시험 범위 본문 추출
-@router.post("/range")
+@router.post("/range", response_model=ExtractPassagesResponse)
 async def extract_exam_range(
     files: List[UploadFile] = File(...),
 ):
@@ -42,14 +47,14 @@ async def extract_exam_range(
         pdf_bytes = await file.read()
         passages = await exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
         all_passages.update(passages)
-    return {
-        "success": True,
-        "passages": all_passages,
-    }
+    return ExtractPassagesResponse(
+        success=True,
+        passages=all_passages,
+    )
 
 
 # 시험지 생성
-@router.post("/generate")
+@router.post("/generate", response_model=GenerateExamResponse)
 async def generate_exam(
     analysis_id: str,
     request: GenerateExamRequest,
@@ -61,11 +66,11 @@ async def generate_exam(
         passages=request.passages.dict(),
         options=request.options.dict(),
     )
-    return {
-        "success": True,
-        "exam_id": str(exam.id),
-        "exam": exam.exam_content,
-    }
+    return GenerateExamResponse(
+        success=True,
+        exam_id=str(exam.id),
+        exam=exam.exam_content,
+    )
 
 
 # 시험지 docx 다운로드
