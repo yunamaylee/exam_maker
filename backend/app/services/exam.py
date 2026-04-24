@@ -64,10 +64,12 @@ def analyze_exam_pattern(
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
         existing = exam_repository.get_analysis_by_school_name(
             db=db,
+            school_name=school_name,
         )
         if existing:
             return existing
 
+        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
         if not pdf_text or not pdf_text.strip():
             raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
 
@@ -100,7 +102,12 @@ def analyze_exam_pattern(
         )
 
 
-# 시험 범???스 예외 발생
+# 시험 범위 본문 추출 함수
+def extract_passages(
+    pdf_text: str,
+) -> dict:
+    try:
+        # PDF 텍스트가 비어있으면 비즈니스 예외 발생
         if not pdf_text or not pdf_text.strip():
             raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
 
@@ -136,6 +143,7 @@ def generate_exam(
     options: dict,
 ) -> dict:
     try:
+        # 분석 결과 조회
         analysis = exam_repository.get_analysis(
             db=db,
             analysis_id=analysis_id,

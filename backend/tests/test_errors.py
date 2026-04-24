@@ -29,7 +29,11 @@ def test_get_display_message_with_slash_code():
 
 # get_display_message 알 수 없는 코드 테스트
 def test_get_display_message_unknown_code():
-    me지 테스트
+    message = get_display_message("UNKNOWN/CODE")
+    assert message == "알 수 없는 오류가 발생했습니다."
+
+
+# handle_service_error AppError 재랩핑 방지 테스트
 def test_handle_service_error_no_rewrap():
     original = AppError(
         source="repository",
@@ -38,7 +42,6 @@ def test_handle_service_error_no_rewrap():
     )
     with pytest.raises(AppError) as exc_info:
         handle_service_error(original, code="SERVICE/EXAM/ANALYZE_PATTERN")
-    # 재랩핑 없이 원본 AppError 그대로 올라와야 함
     assert exc_info.value.code == "REPO/EXAM/NOT_FOUND"
     assert exc_info.value.source == "repository"
 
@@ -59,7 +62,8 @@ def test_map_sqlalchemy_error_default():
         Exception("unknown error"),
         code="REPO/EXAM/GET_ANALYSIS",
     )
-    a
+    assert error.code == "REPO/EXAM/GET_ANALYSIS"
+    assert error.source == "repository"
 
 
 # 서비스 레이어 - 캐싱 동작 테스트
@@ -95,7 +99,10 @@ def test_analyze_exam_pattern_raises_on_empty_pdf():
 
     with patch(
         "app.repositories.exam.get_analysis_by_school_name",
-        return_value=Non(
+        return_value=None,
+    ):
+        with pytest.raises(AppError) as exc_info:
+            analyze_exam_pattern(
                 db=mock_db,
                 school_name="테스트고등학교",
                 pdf_text="",
