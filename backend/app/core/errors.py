@@ -78,10 +78,36 @@ def map_sqlalchemy_error(
     code: str,
     context: Optional[dict[str, Any]] = None,
 ) -> AppError:
-    return AppError(
-        source="repository",
-        code=code,
-        message=str(error),
-        cause=error,
-        context=context,
-    )
+    from sqlalchemy.exc import IntegrityError, OperationalError, DataError
+    if isinstance(error, IntegrityError):
+        return AppError(
+            source="repository",
+            code="REPO/DUPLICATE",
+            message="중복된 데이터입니다.",
+            cause=error,
+            context=context,
+        )
+    elif isinstance(error, OperationalError):
+        return AppError(
+            source="repository",
+            code="REPO/DB_CONNECTION_ERROR",
+      베이 오류가 발생했습니다.",
+            cause=error,
+            context=context,
+        )
+    elif isinstance(error, DataError):
+        return AppError(
+            source="repository",
+            code="REPO/DATA_ERROR",
+            message="잘못된 데이터 형식입니다.",
+            cause=error,
+            context=context,
+        )
+    else:
+        return AppError(
+            source="repository",
+            code=code,
+            message=str(error),
+            cause=error,
+            context=context,
+        )
