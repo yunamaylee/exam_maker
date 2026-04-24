@@ -2,7 +2,7 @@ import io
 from typing import List
 from fastapi import APIRouter, UploadFile, File, Depends
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies import get_db
 from app.services import exam as exam_service
 from app.services.docx import create_exam_docx
@@ -16,10 +16,9 @@ router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 async def analyze_exam(
     school_name: str,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     pdf_bytes = await file.read()
-    # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
     analysis = await exam_service.analyze_exam_from_pdf(
         db=db,
         school_name=school_name,
@@ -41,7 +40,6 @@ async def extract_exam_range(
     all_passages = {}
     for file in files:
         pdf_bytes = await file.read()
-        # 라우터는 서비스만 호출 — PDF 추출은 서비스 내부에서 처리
         passages = await exam_service.extract_passages_from_pdf(pdf_bytes=pdf_bytes)
         all_passages.update(passages)
     return {
@@ -55,7 +53,7 @@ async def extract_exam_range(
 async def generate_exam(
     analysis_id: str,
     request: GenerateExamRequest,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     exam = await exam_service.generate_exam(
         db=db,
@@ -74,7 +72,7 @@ async def generate_exam(
 @router.get("/{exam_id}/download")
 async def download_exam(
     exam_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     exam = await exam_service.get_exam(
         db=db,
