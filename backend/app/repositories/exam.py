@@ -35,7 +35,8 @@ def get_analysis(
         analysis = db.query(ExamAnalysis).filter(
             ExamAnalysis.id == analysis_id
         ).first()
-        if not error(
+        if not analysis:
+            raise create_repo_error(
                 code="REPO/EXAM/NOT_FOUND",
                 message="분석 결과를 찾을 수 없습니다.",
             )

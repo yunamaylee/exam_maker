@@ -26,7 +26,10 @@ def analyze_exam_from_pdf(
     try:
         pdf_text = extract_pdf_text(pdf_bytes)
         return analyze_exam_pattern(db=db, school_name=school_name, pdf_text=pdf_text)
-    except Aprvice_error(
+    except AppError:
+        raise
+    except Exception as e:
+        handle_service_error(
             e,
             code="SERVICE/EXAM/ANALYZE_FROM_PDF",
             message="PDF 분석 중 오류가 발생했습니다.",
@@ -60,7 +63,13 @@ def analyze_exam_pattern(
         # DB에 이미 분석 결과 있으면 재활용 (캐싱)
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
         existing = exam_repository.get_analysis_by_school_name(
-            db=db,           raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
+            db=db,
+        )
+        if existing:
+            return existing
+
+        if not pdf_text or not pdf_text.strip():
+            raise ValueError("PDF에서 텍스트를 추출할 수 없습니다.")
 
         client = get_anthropic_client()
 
@@ -124,7 +133,12 @@ def generate_exam(
     db: Session,
     analysis_id: str,
     passages: dict,
-    optio     analysis_id=analysis_id,
+    options: dict,
+) -> dict:
+    try:
+        analysis = exam_repository.get_analysis(
+            db=db,
+            analysis_id=analysis_id,
         )
 
         # 지문이 비어있으면 비즈니스 예외 발생
@@ -153,7 +167,9 @@ def generate_exam(
         # DB 저장
         return exam_repository.save_exam_result(
             db=db,
-            analys )
+            analysis_id=str(analysis.id),
+            exam_content=exam_content,
+        )
     except AppError:
         raise
     except Exception as e:
