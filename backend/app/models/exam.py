@@ -29,7 +29,8 @@ class ExamResult(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     analysis_id = Column(
-        UUID(as_uuidCADE"),
+        UUID(as_uuid=True),
+        ForeignKey("exam_analysis.id", ondelete="CASCADE"),
         nullable=False,
     )
     exam_content = Column(JSON, nullable=False)  # Text → JSON으로 통일
