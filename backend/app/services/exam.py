@@ -6,6 +6,7 @@ from app.core.errors import AppError, handle_service_error
 from app.repositories import exam as exam_repository
 from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get_generate_exam_prompt
 from app.utils.pdf import extract_pdf_text
+from app.models.exam import ExamAnalysis, ExamResult
 
 
 def get_anthropic_client() -> anthropic.AsyncAnthropic:
@@ -28,7 +29,7 @@ async def analyze_exam_from_pdf(
     db: Session,
     school_name: str,
     pdf_bytes: bytes,
-) -> dict:
+) -> ExamAnalysis:
     try:
         pdf_text = extract_pdf_text(pdf_bytes)
         return await analyze_exam_pattern(db=db, school_name=school_name, pdf_text=pdf_text)
@@ -64,7 +65,7 @@ async def analyze_exam_pattern(
     db: Session,
     school_name: str,
     pdf_text: str,
-) -> dict:
+) -> ExamAnalysis:
     try:
         # 학교명 정규화 (공백 제거 등)
         normalized_name = normalize_school_name(school_name)
@@ -150,7 +151,7 @@ async def generate_exam(
     analysis_id: str,
     passages: dict,
     options: dict,
-) -> dict:
+) -> ExamResult:
     try:
         # 분석 결과 조회
         analysis = exam_repository.get_analysis(
@@ -201,7 +202,7 @@ async def generate_exam(
 async def get_exam(
     db: Session,
     exam_id: str,
-) -> dict:
+) -> ExamResult:
     try:
         return exam_repository.get_exam_result(
             db=db,
