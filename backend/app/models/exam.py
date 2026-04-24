@@ -19,7 +19,7 @@ class ExamAnalysis(Base):
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    school_name = Column(String, nullable=False)
+    school_name = Column(String(100), nullable=False)  # 길이 제한 추가
     analysis_result = Column(JSON, nullable=False)  # 상세 분석 예정으로 JSON 형식 저장
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
