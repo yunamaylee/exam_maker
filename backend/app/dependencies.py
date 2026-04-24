@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from typing import AsyncGenerator
-from app.core.config import DATABASE_URL
+import anthropic
+from app.core.config import DATABASE_URL, ANTHROPIC_API_KEY
+
 
 # PostgreSQL async URL로 변환 (postgresql:// → postgresql+asyncpg://)
 def get_async_database_url() -> str:
@@ -22,6 +24,9 @@ SessionLocal = async_sessionmaker(
     autoflush=False,
     expire_on_commit=False,
 )
+
+# Anthropic 클라이언트 싱글턴 (HTTP 커넥션 풀 재사용)
+anthropic_client = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

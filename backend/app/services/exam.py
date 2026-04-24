@@ -2,16 +2,12 @@ import json
 import re
 import anthropic
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.config import ANTHROPIC_API_KEY
 from app.core.errors import AppError, handle_service_error
 from app.repositories import exam as exam_repository
 from app.prompts.exam import ANALYZE_SCHOOL_PROMPT, EXTRACT_PASSAGES_PROMPT, get_generate_exam_prompt
 from app.utils.pdf import extract_pdf_text
 from app.models.exam import ExamAnalysis, ExamResult
-
-
-def get_anthropic_client() -> anthropic.AsyncAnthropic:
-    return anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+from app.dependencies import anthropic_client
 
 
 # JSON 코드블록 제거 유틸
@@ -89,6 +85,7 @@ async def analyze_exam_pattern(
 
         # DB에 이미 분석 결과 있으면 재활용
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
+        # 향후 개선: (school_name, year) 복합 키로 확장 가능
         existing = await exam_repository.get_analysis_by_school_name(
             db=db,
             school_name=normalized_name,
@@ -104,11 +101,9 @@ async def analyze_exam_pattern(
                 message="PDF에서 텍스트를 추출할 수 없습니다.",
             )
 
-        client = get_anthropic_client()
-
         try:
             # Claude Sonnet으로 출제 패턴 분석
-            message = await client.messages.create(
+            message = await anthropic_client.messages.create(
                 model="claude-sonnet-4-5",
                 max_tokens=2000,
                 messages=[
@@ -158,11 +153,9 @@ async def extract_passages(
                 message="PDF에서 텍스트를 추출할 수 없습니다.",
             )
 
-        client = get_anthropic_client()
-
         try:
             # Claude Haiku로 순수 본문 추출 (듣기 제외)
-            message = await client.messages.create(
+            message = await anthropic_client.messages.create(
                 model="claude-haiku-4-5",
                 max_tokens=8000,
                 messages=[
@@ -216,11 +209,9 @@ async def generate_exam(
                 message="시험 범위 지문이 없습니다.",
             )
 
-        client = get_anthropic_client()
-
         try:
             # Claude Opus로 시험지 생성
-            message = await client.messages.create(
+            message = await anthropic_client.messages.create(
                 model="claude-opus-4-5",
                 max_tokens=16000,
                 messages=[
