@@ -17,6 +17,12 @@ def clean_json_response(text: str) -> str:
     return text.replace("```json", "").replace("```", "").strip()
 
 
+# 학교명 정규화 유틸
+# 대소문자, 공백 등 사용자 입력 불일치로 인한 캐시 미스 방지
+def normalize_school_name(school_name: str) -> str:
+    return school_name.strip()
+
+
 # PDF 바이트에서 텍스트 추출 후 패턴 분석까지 수행 (라우터 진입점)
 async def analyze_exam_from_pdf(
     db: Session,
@@ -60,11 +66,14 @@ async def analyze_exam_pattern(
     pdf_text: str,
 ) -> dict:
     try:
+        # 학교명 정규화 (공백 제거 등)
+        normalized_name = normalize_school_name(school_name)
+
         # DB에 이미 분석 결과 있으면 재활용
         # 주의: 동일 학교명 기준 캐싱이므로 연도/버전 구분 없음 (의도된 동작)
         existing = exam_repository.get_analysis_by_school_name(
             db=db,
-            school_name=school_name,
+            school_name=normalized_name,
         )
         if existing:
             return existing
@@ -82,14 +91,14 @@ async def analyze_exam_pattern(
             messages=[
                 {
                     "role": "user",
-                    "content": f"{ANALYZE_SCHOOL_PROMPT}\n\n학교명: {school_name}\n\n시험지 내용:\n{pdf_text}"
+                    "content": f"{ANALYZE_SCHOOL_PROMPT}\n\n학교명: {normalized_name}\n\n시험지 내용:\n{pdf_text}"
                 }
             ]
         )
         analysis_result = json.loads(clean_json_response(message.content[0].text))
         return exam_repository.save_analysis(
             db=db,
-            school_name=school_name,
+            school_name=normalized_name,
             analysis_result=analysis_result,
         )
     except AppError:

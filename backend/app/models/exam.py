@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, String, DateTime, JSON, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.models.base import Base
@@ -13,6 +13,10 @@ def utcnow():
 # 시험 분석 모델
 class ExamAnalysis(Base):
     __tablename__ = "exam_analysis"
+    __table_args__ = (
+        UniqueConstraint("school_name", name="uq_exam_analysis_school_name"),
+        Index("ix_exam_analysis_school_name", "school_name"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     school_name = Column(String, nullable=False)
