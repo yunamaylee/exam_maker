@@ -11,7 +11,6 @@ from app.schemas.exam import GenerateExamRequest
 router = APIRouter(prefix="/api/v1/exam", tags=["exam"])
 
 
-# 시험 패턴 분석
 @router.post("/analyze")
 async def analyze_exam(
     school_name: str,
@@ -32,8 +31,8 @@ async def analyze_exam(
     }
 
 
-# 시험 범위 본문 추출
-@router.ples: List[UploadFile] = File(...),
+@router.post("/range")
+async def extract_exam_rangoadFile] = File(...),
 ):
     all_passages = {}
     for file in files:
@@ -46,7 +45,6 @@ async def analyze_exam(
     }
 
 
-# 시험지 생성
 @router.post("/generate")
 async def generate_exam(
     analysis_id: str,
@@ -66,7 +64,6 @@ async def generate_exam(
     }
 
 
-# 시험지 docx 다운로드
 @router.get("/{exam_id}/download")
 async def download_exam(
     exam_id: str,
@@ -76,7 +73,7 @@ async def download_exam(
         db=db,
         exam_id=exam_id,
     )
-    docx_bytes = create_ent)
+    docx_bytes = create_exam_docx(exam.exam_content)
     return StreamingResponse(
         io.BytesIO(docx_bytes),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
