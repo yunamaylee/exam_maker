@@ -44,9 +44,27 @@ export default function SettingsPage() {
 
   // handlers
   const handleTypeToggle = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    )
+    setSelectedTypes((prev) => {
+      const updated = prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type]
+
+      const hasMC = updated.some((t) => MC_TYPES.includes(t))
+      const hasSub = updated.some((t) => SUBJECTIVE_TYPES.includes(t))
+
+      if (hasMC && !hasSub) setSubjective(0)
+      if (hasSub && !hasMC) setMultipleChoice(0)
+      if (hasMC && hasSub) {
+        // 둘 다 선택되면 슬라이더 유지
+      }
+      if (!hasMC && !hasSub) {
+        // 아무것도 선택 안 하면 기본값 복원
+        setMultipleChoice(analysisResult?.exam_meta?.multiple_choice?.count ?? 25)
+        setSubjective(analysisResult?.exam_meta?.subjective?.count ?? 5)
+      }
+
+      return updated
+    })
   }
 
   const handleNext = () => {
