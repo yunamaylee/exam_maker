@@ -1,4 +1,4 @@
-from typing import Optional, Any, Literal
+from typing import Optional, Any, Literal, NoReturn
 
 ErrorSource = Literal["repository", "service"]
 
@@ -59,7 +59,7 @@ def handle_service_error(
     code: str = "INTERNAL_ERROR",
     message: str = "서비스 처리 중 오류가 발생했습니다.",
     context: Optional[dict[str, Any]] = None,
-) -> None:
+) -> NoReturn:
     if isinstance(error, AppError):
         raise error
 
@@ -73,6 +73,8 @@ def handle_service_error(
 
 
 def get_display_message(code: str) -> str:
+    # 슬래시 계층형 코드에서 마지막 세그먼트 추출
+    # 예: "REPO/EXAM/NOT_FOUND" → "NOT_FOUND"
     last_segment = code.split("/")[-1]
     return ERROR_DISPLAY_MESSAGES.get(last_segment, DEFAULT_DISPLAY_MESSAGE)
 
