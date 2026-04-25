@@ -26,6 +26,7 @@ def clean_json_response(text: str) -> str:
         return text[start:end]
     return text
 
+
 # 학교명 정규화 유틸
 # - 앞뒤 공백 제거
 # - 내부 공백 단일화 (연속 공백 → 단일 공백)
@@ -73,6 +74,9 @@ async def extract_passages_from_pdf(
 ) -> dict:
     try:
         pdf_text = extract_pdf_text(pdf_bytes)
+        # 텍스트가 비어있으면 스킵 (스캔본 등)
+        if not pdf_text or not pdf_text.strip():
+            return {"passages": []}
         return await extract_passages(pdf_text=pdf_text)
     except AppError:
         raise
@@ -213,7 +217,7 @@ async def generate_exam(
         )
 
         # 지문이 비어있으면 사용자 입력 오류로 처리
-        if not passages:
+        if not passages or not passages.get("passages"):
             raise AppError(
                 source="service",
                 code="SERVICE/EXAM/EMPTY_PASSAGES",
