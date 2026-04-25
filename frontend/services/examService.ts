@@ -10,9 +10,10 @@ export async function analyzeExam({
 }) {
   const formData = new FormData()
   formData.append('file', file)
+  formData.append('school_name', schoolName)  // query parameter → form data로 변경
 
   const response = await fetch(
-    `${BASE_URL}/api/v1/exam/analyze?school_name=${encodeURIComponent(schoolName)}`,
+    `${BASE_URL}/api/v1/exam/analyze`,  // query string 제거
     {
       method: 'POST',
       body: formData,
