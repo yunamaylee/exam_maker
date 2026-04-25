@@ -12,8 +12,19 @@ from app.dependencies import anthropic_client
 
 # JSON 코드블록 제거 유틸
 def clean_json_response(text: str) -> str:
-    return text.replace("```json", "").replace("```", "").strip()
-
+    # 백틱 제거
+    text = text.replace("```json", "").replace("```", "").strip()
+    # JSON 객체 시작/끝 위치 추출
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if start != -1 and end > start:
+        return text[start:end]
+    # JSON 배열인 경우
+    start = text.find("[")
+    end = text.rfind("]") + 1
+    if start != -1 and end > start:
+        return text[start:end]
+    return text
 
 # 학교명 정규화 유틸
 # - 앞뒤 공백 제거
